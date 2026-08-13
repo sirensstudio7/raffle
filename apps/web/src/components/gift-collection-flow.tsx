@@ -42,18 +42,18 @@ function playBoxShakeSound(): HTMLAudioElement | null {
 
 function FlowHeader() {
   return (
-    <header className="pointer-events-none absolute inset-x-0 top-0 z-20 flex w-full items-center justify-between gap-3 px-4 pt-3 sm:px-8 sm:pt-4">
+    <header className="pointer-events-none absolute inset-x-0 top-0 z-20 flex w-full items-center justify-between gap-2 px-3 pt-[max(0.65rem,env(safe-area-inset-top))] sm:gap-3 sm:px-8 sm:pt-4">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src="/brand/google.png"
         alt="Google"
-        className="h-6 w-auto object-contain sm:h-8"
+        className="h-5 w-auto shrink-0 object-contain sm:h-8"
       />
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src="/brand/team-google.png"
         alt="#TeamGoogle Google Student Ambassador"
-        className="h-14 w-auto max-w-[50%] object-contain object-right sm:h-20 sm:max-w-[58%]"
+        className="h-10 w-auto max-w-[46%] object-contain object-right sm:h-20 sm:max-w-[58%]"
       />
     </header>
   );
@@ -238,18 +238,26 @@ export function GiftCollectionFlow({ config, onWin, className }: GiftCollectionF
       <SideDecor side="left" />
       <SideDecor side="right" />
 
-      <div className="relative z-10 flex min-h-0 w-full flex-1 flex-col items-center justify-center overflow-hidden px-4 pb-4 pt-[4.5rem] sm:pb-6 sm:pt-24">
+      <div className="relative z-10 flex min-h-0 w-full flex-1 flex-col items-center justify-center overflow-hidden px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-[4.25rem] sm:px-4 sm:pb-6 sm:pt-24">
         {step === "thankYou" ? (
-          <div className="gift-step-in flex w-full max-w-2xl flex-col items-center gap-6 text-center sm:gap-8">
-            <div className="w-full space-y-5">
+          <div className="gift-step-in flex w-full max-w-2xl flex-col items-center gap-4 text-center sm:gap-8">
+            <div className="w-full space-y-3 sm:space-y-5">
               <h1 className="gift-thankyou-title font-bold leading-[1.15] tracking-tight text-slate-900">
-                <span className="block whitespace-nowrap">Terima kasih telah</span>
-                <span className="block whitespace-nowrap">menyelesaikan misimu.</span>
+                <span className="block max-sm:whitespace-normal whitespace-nowrap">
+                  Terima kasih telah
+                </span>
+                <span className="block max-sm:whitespace-normal whitespace-nowrap">
+                  menyelesaikan misimu.
+                </span>
               </h1>
               <div className="relative">
                 <p className="gift-thankyou-title font-bold leading-[1.15] tracking-tight text-slate-900">
-                  <span className="block whitespace-nowrap">Klik tombol di bawah</span>
-                  <span className="block whitespace-nowrap">untuk dapatkan hadiah.</span>
+                  <span className="block max-sm:whitespace-normal whitespace-nowrap">
+                    Klik tombol di bawah
+                  </span>
+                  <span className="block max-sm:whitespace-normal whitespace-nowrap">
+                    untuk dapatkan hadiah.
+                  </span>
                 </p>
                 <BottomDecor />
               </div>
@@ -258,13 +266,13 @@ export function GiftCollectionFlow({ config, onWin, className }: GiftCollectionF
               type="button"
               onClick={advanceFromThankYou}
               aria-label="Mulai"
-              className="relative z-20 mt-8 transition active:scale-[0.98] hover:opacity-95 sm:mt-10"
+              className="relative z-20 mt-4 max-w-[min(100%,18rem)] transition active:scale-[0.98] hover:opacity-95 sm:mt-10 sm:max-w-none"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/flow/mulai-button.png"
                 alt="Mulai"
-                className="h-16 w-auto object-contain sm:h-20"
+                className="mx-auto h-14 w-auto max-w-full object-contain sm:h-20"
                 draggable={false}
               />
             </button>
@@ -272,7 +280,7 @@ export function GiftCollectionFlow({ config, onWin, className }: GiftCollectionF
         ) : null}
 
         {step === "spin" ? (
-          <div className="gift-step-in flex w-full max-w-lg flex-col items-center gap-4">
+          <div className="gift-step-in flex w-full max-w-lg flex-col items-center gap-2 sm:gap-4">
             <PrizePill label={campaignName} />
             <SpinWidget variant="mysteryBoxes" config={config} onWin={handleWin} />
           </div>
@@ -285,7 +293,7 @@ export function GiftCollectionFlow({ config, onWin, className }: GiftCollectionF
               <img
                 src="/flow/mystery-box-open.webp?v=1"
                 alt=""
-                className="h-56 w-56 object-contain drop-shadow-xl sm:h-64 sm:w-64"
+                className="h-44 w-44 object-contain drop-shadow-xl sm:h-64 sm:w-64"
                 draggable={false}
               />
             </div>
@@ -293,15 +301,17 @@ export function GiftCollectionFlow({ config, onWin, className }: GiftCollectionF
         ) : null}
 
         {step === "reveal" && result ? (
-          <div className="gift-reveal-in flex max-h-full w-full max-w-xl flex-col items-center justify-center gap-2 text-center sm:gap-3">
+          <div className="gift-reveal-in flex max-h-full w-full max-w-xl flex-col items-center justify-center gap-1.5 text-center sm:gap-3">
             <CanvasConfetti active burstKey={confettiKey} />
-            <div className="space-y-2 sm:space-y-3">
+            <div className="space-y-1.5 sm:space-y-3">
               <h1 className="gift-reveal-title font-bold tracking-tight text-slate-900">
                 Selamat!
               </h1>
               <p className="gift-reveal-subtitle font-bold leading-none tracking-tight text-slate-900">
-                <span className="block whitespace-nowrap">Kamu mendapatkan</span>
-                <span className="block whitespace-nowrap">1 buah</span>
+                <span className="block max-sm:whitespace-normal whitespace-nowrap">
+                  Kamu mendapatkan
+                </span>
+                <span className="block max-sm:whitespace-normal whitespace-nowrap">1 buah</span>
               </p>
             </div>
             <PrizePill label={result.prize.name} />

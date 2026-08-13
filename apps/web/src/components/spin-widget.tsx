@@ -39,6 +39,20 @@ function mysteryLayoutForViewport(width: number, height: number): { itemSize: nu
   if (!portrait) {
     return { itemSize: MYSTERY_ITEM_SIZE, itemGap: MYSTERY_ITEM_GAP };
   }
+
+  // Phones: fit reel + header/pill/button inside the viewport (desktop portrait unchanged).
+  const phone = width < 480;
+  if (phone) {
+    const itemGap = Math.max(10, Math.round(height * 0.018));
+    // Header, prize pill, Spin button, vertical padding/gaps.
+    const reserved = Math.min(300, Math.max(220, Math.round(height * 0.4)));
+    const available = Math.max(240, height - reserved);
+    const fitted = Math.floor((available - itemGap * (MYSTERY_VISIBLE - 1)) / MYSTERY_VISIBLE);
+    const maxSize = Math.min(148, Math.round(width * 0.36));
+    const itemSize = Math.max(72, Math.min(maxSize, fitted));
+    return { itemSize, itemGap };
+  }
+
   const itemGap = MYSTERY_ITEM_GAP_PORTRAIT;
   // Scale up on tall portrait screens while keeping 4 boxes on screen.
   const fitted = Math.floor((height * 0.72 - itemGap * (MYSTERY_VISIBLE - 1)) / MYSTERY_VISIBLE);
@@ -661,7 +675,7 @@ export function SpinWidget({
         </div>
       </div>
 
-      <div className="mt-5 flex w-full flex-col items-center gap-3">
+      <div className="mt-3 flex w-full flex-col items-center gap-2 sm:mt-5 sm:gap-3">
         <button
           type="button"
           disabled={busy || celebrating}

@@ -150,10 +150,36 @@ body {
   height: min(86vw, 42dvh, 22rem);
 }
 
+@media (max-width: 639px) {
+  .gift-thankyou-title {
+    font-size: clamp(1.35rem, 6.2vw, 1.85rem);
+  }
+
+  .gift-reveal-title {
+    font-size: clamp(1.75rem, 8vw, 2.5rem);
+  }
+
+  .gift-reveal-subtitle {
+    font-size: clamp(1rem, 4.6vw, 1.35rem);
+  }
+
+  .gift-reveal-prize {
+    width: min(72vw, 34dvh, 16rem);
+    height: min(72vw, 34dvh, 16rem);
+  }
+}
+
 @media (orientation: portrait) {
   .gift-reveal-prize {
     width: min(92vw, 52dvh, 28rem);
     height: min(92vw, 52dvh, 28rem);
+  }
+}
+
+@media (orientation: portrait) and (max-width: 639px) {
+  .gift-reveal-prize {
+    width: min(70vw, 32dvh, 15rem);
+    height: min(70vw, 32dvh, 15rem);
   }
 }
 
@@ -276,6 +302,14 @@ body {
   .gift-side-decor {
     height: min(90dvh, 48rem);
     max-width: min(40vw, 11.5rem);
+  }
+}
+
+@media (max-width: 639px) {
+  .gift-side-decor {
+    height: min(62dvh, 22rem);
+    max-width: min(18vw, 4.25rem);
+    opacity: 0.9;
   }
 }
 
@@ -407,6 +441,13 @@ body {
   transform: translate(-50%, 0);
   overflow: visible;
   pointer-events: none;
+}
+
+@media (max-width: 639px) {
+  .gift-bottom-decor {
+    top: calc(100% + 0.65rem);
+    width: min(88vw, 18rem);
+  }
 }
 
 @media (min-width: 640px) {

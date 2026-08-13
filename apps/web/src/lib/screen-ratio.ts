@@ -20,5 +20,5 @@ export function spinShellClass(ratio: ScreenRatio | undefined): string {
 }
 
 export function spinPageWrapperClass(isFixedRatio: boolean): string {
-  return isFixedRatio ? "" : "flex items-center justify-center px-4";
+  return isFixedRatio ? "" : "flex items-center justify-center px-0 sm:px-4";
 }
