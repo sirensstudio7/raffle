@@ -20,7 +20,9 @@ export const env = {
   DATABASE_URL: required("DATABASE_URL"),
   SUPABASE_URL: process.env.SUPABASE_URL ?? "",
   SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY ?? "",
-  JWT_SECRET: required("JWT_SECRET"),
+  // Prefer Render env; fall back so a blank Blueprint placeholder doesn't crash boot.
+  JWT_SECRET:
+    process.env.JWT_SECRET?.trim() || "dev-secret-change-in-production",
   JWT_EXPIRE_HOURS: Number(process.env.JWT_EXPIRE_HOURS ?? 168),
   ADMIN_EMAIL: process.env.ADMIN_EMAIL ?? "admin@example.com",
   ADMIN_PASSWORD: process.env.ADMIN_PASSWORD ?? "admin123",
