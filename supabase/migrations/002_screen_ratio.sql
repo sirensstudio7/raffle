@@ -1,0 +1,2 @@
+ALTER TABLE raffle_settings
+  ADD COLUMN IF NOT EXISTS screen_ratio VARCHAR(10) NOT NULL DEFAULT 'auto';

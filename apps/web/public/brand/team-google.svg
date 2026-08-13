@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 36" fill="none" role="img" aria-label="#TeamGoogle">
+  <text x="0" y="24" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700" fill="#202124">#Team</text>
+  <text x="58" y="24" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700" fill="#4285F4">G</text>
+  <text x="72" y="24" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700" fill="#EA4335">o</text>
+  <text x="85" y="24" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700" fill="#FBBC05">o</text>
+  <text x="98" y="24" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700" fill="#4285F4">g</text>
+  <text x="111" y="24" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700" fill="#34A853">l</text>
+  <text x="119" y="24" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700" fill="#EA4335">e</text>
+  <g transform="translate(138 4)">
+    <path d="M10 0l1.8 5.5H18l-4.6 3.4 1.8 5.5L10 11l-5.2 3.4 1.8-5.5L2 5.5h6.2L10 0z" fill="#FBBC05"/>
+    <circle cx="18" cy="3" r="2" fill="#EA4335"/>
+    <circle cx="2" cy="14" r="1.6" fill="#4285F4"/>
+    <circle cx="16" cy="16" r="1.4" fill="#34A853"/>
+  </g>
+</svg>

@@ -1,0 +1,24 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #0f172a;
+  --border: #e2e8f0;
+  --card: #ffffff;
+  --muted-foreground: #64748b;
+  --primary: #ea580c;
+  --primary-foreground: #ffffff;
+  --destructive: #dc2626;
+  --accent: #f1f5f9;
+  --accent-foreground: #0f172a;
+  --ring: #ea580c;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+.spin-page-bg {
+  background: linear-gradient(to bottom, #ffffff 40%, #5bb9e8 100%);
+}
