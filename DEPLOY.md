@@ -6,7 +6,7 @@ This project is three apps:
 |-----|------|------|
 | `apps/web` | Public spin page | **Vercel** |
 | `apps/admin` | Admin dashboard | **Vercel** (separate project) |
-| `apps/api` | Fastify API | **Railway** (or Render/Fly) |
+| `apps/api` | Fastify API | **Render** or **Railway** (Docker) |
 | Postgres + Storage | Data / prize images | **Supabase** |
 
 Vercel is only for the Next.js frontends. The Fastify API must run as a long-lived Node service.
@@ -18,7 +18,7 @@ Vercel is only for the Next.js frontends. The Fastify API must run as a long-liv
 - Supabase project with schema applied (`supabase/migrations/001_initial.sql`)
 - GitHub repo for this project (push the code)
 - [Vercel](https://vercel.com) account
-- [Railway](https://railway.app) account (recommended for API)
+- [Render](https://render.com) account (or [Railway](https://railway.app)) for the API
 
 ---
 
@@ -33,34 +33,50 @@ Vercel is only for the Next.js frontends. The Fastify API must run as a long-liv
 
 ---
 
-## 2. Deploy API (Railway)
+## 2. Deploy API (Render **or** Railway)
 
-1. New Project → Deploy from GitHub → select this repo.
-2. Railway should pick up `railway.toml` + `apps/api/Dockerfile`.
-3. Set **Variables**:
+Same Docker image (`apps/api/Dockerfile`). Prefer **Render** if Railway healthchecks are painful.
+
+### Option A — Render (recommended alternative)
+
+1. [Render Dashboard](https://dashboard.render.com) → **New** → **Blueprint**
+2. Connect `sirensstudio7/raffle` → it reads `render.yaml`
+3. Fill env vars when prompted (mark secret ones carefully):
 
 ```env
 DATABASE_URL=postgresql://...pooler.supabase.com:5432/postgres
 SUPABASE_URL=https://xxxx.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=eyJ...
 JWT_SECRET=use-a-long-random-string
-JWT_EXPIRE_HOURS=168
 ADMIN_EMAIL=you@example.com
 ADMIN_PASSWORD=change-me
-ADMIN_NAME=Admin
 CORS_ORIGINS=https://your-web.vercel.app,https://your-admin.vercel.app
 ```
 
-4. Generate a public domain (e.g. `https://raffle-api-production.up.railway.app`).
-5. Hit `https://<api-host>/health` → `{ "ok": true }`.
-6. Seed admin once (from your laptop with the same `DATABASE_URL`):
+4. Or **New → Web Service** manually:
+   - Repo: `sirensstudio7/raffle`
+   - Language: **Docker**
+   - Dockerfile path: `apps/api/Dockerfile`
+   - Docker context: repo root (`.`)
+   - Health check path: `/health`
+5. After deploy: `https://raffle-api.onrender.com/health` → `{ "ok": true }`
+6. **Note (free tier):** service sleeps after idle; first request can take ~30–60s.
+
+### Option B — Railway
+
+1. New Project → Deploy from GitHub → select this repo.
+2. Railway should pick up `railway.toml` + `apps/api/Dockerfile`.
+3. Set the same env vars as above.
+4. Public URL e.g. `https://raffle-api-production.up.railway.app/health`
+
+### Seed admin (once)
+
+From your laptop with production `DATABASE_URL` in `.env`:
 
 ```bash
 npm install
 npm run seed:db
 ```
-
-Or run `npm run seed --workspace=api` against production `DATABASE_URL` only if schema is already applied.
 
 ---
 
@@ -124,7 +140,7 @@ Redeploy API (or restart). Then test:
 
 ## Env cheat sheet
 
-### API (Railway)
+### API (Render / Railway)
 
 | Variable | Required |
 |----------|----------|
@@ -134,7 +150,7 @@ Redeploy API (or restart). Then test:
 | `SUPABASE_SERVICE_ROLE_KEY` | yes (for images) |
 | `ADMIN_EMAIL` / `ADMIN_PASSWORD` | for seed |
 | `CORS_ORIGINS` | yes in prod |
-| `PORT` | set by Railway automatically |
+| `PORT` | set automatically by the host |
 
 ### Web / Admin (Vercel)
 

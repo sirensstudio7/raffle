@@ -1,0 +1,31 @@
+# Render Blueprint — API only (web/admin stay on Vercel)
+# https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: raffle-api
+    runtime: docker
+    dockerfilePath: ./apps/api/Dockerfile
+    dockerContext: .
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: ADMIN_NAME
+        value: Admin
+      - key: CORS_ORIGINS
+        sync: false
+      - key: JWT_EXPIRE_HOURS
+        value: "168"
