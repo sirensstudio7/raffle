@@ -12,17 +12,18 @@ COPY apps/api/package.json apps/api/
 COPY apps/web/package.json apps/web/
 COPY apps/admin/package.json apps/admin/
 
-RUN npm ci --workspace=api --include-workspace-root
+# Render may set NODE_ENV=production during build; keep typescript available for `tsc`.
+RUN npm ci --workspace=api --include-workspace-root --include=dev
 
 COPY apps/api apps/api
 
 WORKDIR /app/apps/api
-RUN mkdir -p uploads
+RUN npx tsc -p tsconfig.json && mkdir -p uploads
 
 ENV NODE_ENV=production
 ENV HOST=0.0.0.0
 
 EXPOSE 8000
 
-# Use the hoisted binary explicitly (more reliable than npx in workspaces).
-CMD ["node", "--import", "tsx", "src/index.ts"]
+# Compiled JS — no tsx needed at runtime.
+CMD ["node", "dist/index.js"]

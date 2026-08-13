@@ -57,10 +57,11 @@ CORS_ORIGINS=https://your-web.vercel.app,https://your-admin.vercel.app
    - Repo: `sirensstudio7/raffle`
    - Language: **Docker**
    - Dockerfile path: `apps/api/Dockerfile`
-   - Docker context: repo root (`.`)
+   - Docker context: repo root (`.`) — **not** `apps/api`
    - Health check path: `/health`
 5. After deploy: `https://raffle-api.onrender.com/health` → `{ "ok": true }`
 6. **Note (free tier):** service sleeps after idle; first request can take ~30–60s.
+7. If deploy fails with **Exited with status 1**, open the failed deploy → **Logs** and look for a red `[fatal] API failed to start:` line (that is the real error).
 
 ### Option B — Railway
 

@@ -7,7 +7,7 @@ config({ path: resolve(process.cwd(), "../../.env.local"), override: true });
 config({ path: resolve(process.cwd(), ".env") });
 
 function required(name: string): string {
-  const value = process.env[name];
+  const value = process.env[name]?.trim();
   if (!value) {
     throw new Error(
       `Missing required env: ${name}. Set it in Render → Environment (DATABASE_URL, JWT_SECRET, etc).`,
