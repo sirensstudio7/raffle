@@ -18,7 +18,31 @@ async function main(): Promise<void> {
   await mkdir(uploadsRoot, { recursive: true });
 
   await app.register(cors, {
-    origin: env.CORS_ORIGINS.length > 0 ? env.CORS_ORIGINS : true,
+    // Allow configured origins, any *.vercel.app preview/prod host, or all if unset.
+    origin: (origin, cb) => {
+      if (!origin) {
+        cb(null, true);
+        return;
+      }
+      if (env.CORS_ORIGINS.length === 0) {
+        cb(null, true);
+        return;
+      }
+      if (env.CORS_ORIGINS.includes(origin)) {
+        cb(null, true);
+        return;
+      }
+      try {
+        const host = new URL(origin).hostname;
+        if (host.endsWith(".vercel.app") || host === "vercel.app") {
+          cb(null, true);
+          return;
+        }
+      } catch {
+        /* ignore bad Origin */
+      }
+      cb(null, false);
+    },
     methods: ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   });
   await app.register(multipart, { limits: { fileSize: 5 * 1024 * 1024 } });
