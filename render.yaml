@@ -8,6 +8,7 @@ services:
     dockerContext: .
     plan: free
     healthCheckPath: /health
+    # Give free-tier cold starts enough time
     envVars:
       - key: NODE_ENV
         value: production

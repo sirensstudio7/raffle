@@ -35,7 +35,7 @@ export async function uploadToStorage(
         "Content-Type": contentType,
         "x-upsert": "true",
       },
-      body: data,
+      body: new Uint8Array(data),
     });
 
     if (!response.ok) {

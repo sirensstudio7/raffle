@@ -1,0 +1,19 @@
+**/node_modules
+**/.next
+**/dist
+**/uploads
+**/.git
+**/.env
+**/.env.*
+**/*.log
+**/.DS_Store
+**/*.tsbuildinfo
+.vercel
+
+# Don't send frontend source into the API image (package.json still needed for workspaces).
+apps/web/src
+apps/web/public
+apps/admin/src
+apps/admin/public
+supabase
+*.md

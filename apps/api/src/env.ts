@@ -1,12 +1,18 @@
 import { config } from "dotenv";
 import { resolve } from "node:path";
 
+// Local monorepo .env (ignored in Docker/Render where vars are injected).
 config({ path: resolve(process.cwd(), "../../.env") });
 config({ path: resolve(process.cwd(), "../../.env.local"), override: true });
+config({ path: resolve(process.cwd(), ".env") });
 
 function required(name: string): string {
   const value = process.env[name];
-  if (!value) throw new Error(`Missing required env: ${name}`);
+  if (!value) {
+    throw new Error(
+      `Missing required env: ${name}. Set it in Render → Environment (DATABASE_URL, JWT_SECRET, etc).`,
+    );
+  }
   return value;
 }
 
