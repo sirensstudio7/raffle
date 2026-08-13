@@ -15,6 +15,8 @@ COPY apps/api apps/api
 
 WORKDIR /app/apps/api
 ENV NODE_ENV=production
+RUN mkdir -p uploads
 
 EXPOSE 8000
+# Railway injects PORT; our app reads process.env.PORT
 CMD ["npx", "tsx", "src/index.ts"]

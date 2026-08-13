@@ -14,7 +14,12 @@ const PATCHES: Array<{ column: string; ddl: string }> = [
 
 /** Ensure optional columns exist (safe for dev when migrations were skipped). */
 export async function ensureSchemaPatches(): Promise<void> {
-  const sql = postgres(env.DATABASE_URL, { prepare: false, max: 1 });
+  const sql = postgres(env.DATABASE_URL, {
+    prepare: false,
+    max: 1,
+    connect_timeout: 10,
+    idle_timeout: 5,
+  });
   try {
     for (const patch of PATCHES) {
       const cols = await sql`
@@ -30,6 +35,6 @@ export async function ensureSchemaPatches(): Promise<void> {
       }
     }
   } finally {
-    await sql.end();
+    await sql.end({ timeout: 5 });
   }
 }
