@@ -9,6 +9,7 @@ import {
   type SpinWinResult,
 } from "@/components/spin-widget";
 import { cn } from "@/lib/cn";
+import { matchesSpinKeybinding } from "@/lib/keybinding";
 
 type FlowStep = "thankYou" | "spin" | "opening" | "reveal";
 
@@ -212,7 +213,8 @@ export function GiftCollectionFlow({ config, onWin, className }: GiftCollectionF
     if (step !== "thankYou" && step !== "reveal") return;
 
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.code !== spinKeybinding) return;
+      if (event.repeat) return;
+      if (!matchesSpinKeybinding(event, spinKeybinding)) return;
       const target = event.target;
       if (target instanceof HTMLElement) {
         const tag = target.tagName;
@@ -226,11 +228,13 @@ export function GiftCollectionFlow({ config, onWin, className }: GiftCollectionF
         }
       }
       event.preventDefault();
+      event.stopPropagation();
       actionRef.current();
     };
 
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    // Capture so Enter/Space still work even if Mulai (or another control) is focused.
+    window.addEventListener("keydown", onKeyDown, true);
+    return () => window.removeEventListener("keydown", onKeyDown, true);
   }, [spinKeybinding, step]);
 
   return (

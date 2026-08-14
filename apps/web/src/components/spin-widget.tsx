@@ -3,6 +3,7 @@
 import { ArrowPathIcon } from "@heroicons/react/24/outline";
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
+import { matchesSpinKeybinding } from "@/lib/keybinding";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 const PRIZE_ITEM_SIZE = 168;
@@ -607,7 +608,8 @@ export function SpinWidget({
     if (!spinKeybinding) return;
 
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.code !== spinKeybinding) return;
+      if (event.repeat) return;
+      if (!matchesSpinKeybinding(event, spinKeybinding)) return;
 
       const target = event.target;
       if (target instanceof HTMLElement) {
@@ -623,11 +625,12 @@ export function SpinWidget({
       }
 
       event.preventDefault();
+      event.stopPropagation();
       spinFnRef.current();
     };
 
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    window.addEventListener("keydown", onKeyDown, true);
+    return () => window.removeEventListener("keydown", onKeyDown, true);
   }, [spinKeybinding]);
 
   const focusedIndex = Math.round(position);
