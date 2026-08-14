@@ -155,6 +155,12 @@ export function GiftCollectionFlow({ config, onWin, className }: GiftCollectionF
     setStep("spin");
   }
 
+  function restartForAnotherPrize() {
+    if (step !== "reveal") return;
+    setResult(null);
+    setStep("thankYou");
+  }
+
   function handleWin(win: SpinWinResult) {
     setResult(win);
     onWin?.(win);
@@ -163,6 +169,7 @@ export function GiftCollectionFlow({ config, onWin, className }: GiftCollectionF
 
   actionRef.current = () => {
     if (step === "thankYou") advanceFromThankYou();
+    else if (step === "reveal") restartForAnotherPrize();
   };
 
   useEffect(() => {
@@ -201,7 +208,8 @@ export function GiftCollectionFlow({ config, onWin, className }: GiftCollectionF
   }, [step]);
 
   useEffect(() => {
-    if (!spinKeybinding || step !== "thankYou") return;
+    if (!spinKeybinding) return;
+    if (step !== "thankYou" && step !== "reveal") return;
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.code !== spinKeybinding) return;
@@ -334,10 +342,7 @@ export function GiftCollectionFlow({ config, onWin, className }: GiftCollectionF
             </div>
             <button
               type="button"
-              onClick={() => {
-                setResult(null);
-                setStep("thankYou");
-              }}
+              onClick={restartForAnotherPrize}
               className="mt-0.5 shrink-0 text-xs font-medium text-slate-600 underline-offset-2 hover:underline"
             >
               Ambil hadiah lagi
