@@ -281,9 +281,10 @@ body {
   position: absolute;
   top: 50%;
   z-index: 5;
-  height: min(78dvh, 36rem);
+  /* Fluid height + width so left/right art scales with the frame */
+  height: clamp(18rem, 72dvh, 40rem);
   width: auto;
-  max-width: 22vw;
+  max-width: clamp(4.25rem, 12vw, 9rem);
   transform: translateY(-50%);
   overflow: visible;
 }
@@ -300,22 +301,40 @@ body {
 
 @media (orientation: portrait) {
   .gift-side-decor {
-    height: min(90dvh, 48rem);
-    max-width: min(40vw, 11.5rem);
+    height: clamp(22rem, 86dvh, 52rem);
+    max-width: clamp(5rem, 20vw, 12rem);
   }
 }
 
+/* Narrow phones: keep readable, but don’t crush to ~4rem */
 @media (max-width: 639px) {
   .gift-side-decor {
-    height: min(62dvh, 22rem);
-    max-width: min(18vw, 4.25rem);
-    opacity: 0.9;
+    height: clamp(20rem, 78dvh, 36rem);
+    max-width: clamp(4.5rem, 22vw, 8rem);
+    opacity: 0.92;
+  }
+}
+
+/* Very small phones */
+@media (max-width: 379px) {
+  .gift-side-decor {
+    height: clamp(16rem, 70dvh, 28rem);
+    max-width: clamp(3.5rem, 18vw, 5.5rem);
+    opacity: 0.88;
   }
 }
 
 @media (orientation: landscape) and (min-width: 640px) {
   .gift-side-decor {
-    max-width: 7.5rem;
+    height: clamp(16rem, 78dvh, 34rem);
+    max-width: clamp(5rem, 10vw, 8rem);
+  }
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .gift-side-decor {
+    height: min(88dvh, 22rem);
+    max-width: clamp(3.25rem, 11vw, 5.5rem);
   }
 }
 
@@ -430,37 +449,78 @@ body {
   animation: gift-decor-b4 3.4s ease-in-out infinite;
 }
 
-.gift-bottom-decor {
+.gift-bottom-decor-slot {
+  display: flex;
   position: absolute;
   left: 50%;
-  top: calc(100% + 1.75rem);
+  bottom: 0;
   z-index: 0;
-  width: clamp(22rem, 108vw, 34rem);
+  width: 100%;
+  max-width: min(100%, 42rem);
+  justify-content: center;
+  margin: 0;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.gift-bottom-decor {
+  position: relative;
+  left: auto;
+  top: auto;
+  z-index: 0;
+  display: block;
+  /* One fluid size — aspect-ratio keeps proportions without fighting max-height */
+  width: clamp(12rem, 82vw, 34rem);
   height: auto;
   aspect-ratio: 1024 / 496;
-  transform: translate(-50%, 0);
+  max-width: 100%;
+  transform: none;
   overflow: visible;
   pointer-events: none;
 }
 
-@media (max-width: 639px) {
+@media (max-width: 379px) {
   .gift-bottom-decor {
-    top: calc(100% + 0.65rem);
-    width: min(88vw, 18rem);
+    width: clamp(10rem, 88vw, 16rem);
+  }
+}
+
+@media (min-width: 380px) and (max-width: 639px) {
+  .gift-bottom-decor {
+    width: clamp(13rem, 86vw, 22rem);
   }
 }
 
 @media (min-width: 640px) {
+  .gift-bottom-decor-slot {
+    max-width: min(100%, 36rem);
+  }
+
   .gift-bottom-decor {
-    top: calc(100% + 2rem);
-    width: clamp(18rem, 34vw, 30rem);
+    width: clamp(18rem, 55vw, 30rem);
   }
 }
 
 @media (min-width: 1024px) {
+  .gift-bottom-decor-slot {
+    max-width: min(100%, 40rem);
+  }
+
   .gift-bottom-decor {
-    top: calc(100% + 2.25rem);
-    width: clamp(22rem, 28vw, 34rem);
+    width: clamp(22rem, 40vw, 36rem);
+  }
+}
+
+/* Short / landscape: shrink with height so it stays under Mulai without crowding */
+@media (max-height: 720px) {
+  .gift-bottom-decor {
+    width: clamp(11rem, min(70vw, 42dvh), 26rem);
+  }
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .gift-bottom-decor {
+    width: clamp(10rem, min(50vw, 36dvh), 20rem);
   }
 }
 

@@ -265,42 +265,46 @@ export function GiftCollectionFlow({ config, onWin, className }: GiftCollectionF
 
       <div className="relative z-10 flex min-h-0 w-full flex-1 flex-col items-center justify-center overflow-hidden px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-[4.25rem] sm:px-4 sm:pb-6 sm:pt-24">
         {step === "thankYou" ? (
-          <div className="gift-step-in flex w-full max-w-2xl flex-col items-center gap-4 text-center sm:gap-8">
-            <div className="w-full space-y-3 sm:space-y-5">
-              <h1 className="gift-thankyou-title font-bold leading-[1.15] tracking-tight text-slate-900">
-                <span className="block max-sm:whitespace-normal whitespace-nowrap">
-                  Terima kasih telah
-                </span>
-                <span className="block max-sm:whitespace-normal whitespace-nowrap">
-                  menyelesaikan misimu.
-                </span>
-              </h1>
-              <div className="relative">
-                <p className="gift-thankyou-title font-bold leading-[1.15] tracking-tight text-slate-900">
+          <div className="gift-step-in relative flex h-full w-full max-w-2xl flex-col items-center justify-center text-center">
+            <div className="flex w-full flex-col items-center gap-16 sm:gap-20">
+              <div className="w-full space-y-3 sm:space-y-5">
+                <h1 className="gift-thankyou-title font-bold leading-[1.15] tracking-tight text-slate-900">
                   <span className="block max-sm:whitespace-normal whitespace-nowrap">
-                    Klik tombol di bawah
+                    Terima kasih telah
                   </span>
                   <span className="block max-sm:whitespace-normal whitespace-nowrap">
-                    untuk dapatkan hadiah.
+                    menyelesaikan misimu.
                   </span>
-                </p>
-                <BottomDecor />
+                </h1>
+                <div className="relative">
+                  <p className="gift-thankyou-title font-bold leading-[1.15] tracking-tight text-slate-900">
+                    <span className="block max-sm:whitespace-normal whitespace-nowrap">
+                      Klik tombol di bawah
+                    </span>
+                    <span className="block max-sm:whitespace-normal whitespace-nowrap">
+                      untuk dapatkan hadiah.
+                    </span>
+                  </p>
+                </div>
               </div>
+              <button
+                type="button"
+                onClick={advanceFromThankYou}
+                aria-label="Mulai"
+                className="relative z-20 max-w-[min(100%,18rem)] transition active:scale-[0.98] hover:opacity-95 sm:max-w-none"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/flow/mulai-button.png"
+                  alt="Mulai"
+                  className="mx-auto h-14 w-auto max-w-full object-contain sm:h-20"
+                  draggable={false}
+                />
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={advanceFromThankYou}
-              aria-label="Mulai"
-              className="relative z-20 mt-4 max-w-[min(100%,18rem)] transition active:scale-[0.98] hover:opacity-95 sm:mt-10 sm:max-w-none"
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/flow/mulai-button.png"
-                alt="Mulai"
-                className="mx-auto h-14 w-auto max-w-full object-contain sm:h-20"
-                draggable={false}
-              />
-            </button>
+            <div className="gift-bottom-decor-slot" aria-hidden>
+              <BottomDecor />
+            </div>
           </div>
         ) : null}
 
@@ -333,10 +337,7 @@ export function GiftCollectionFlow({ config, onWin, className }: GiftCollectionF
                 Selamat!
               </h1>
               <p className="gift-reveal-subtitle font-bold leading-none tracking-tight text-slate-900">
-                <span className="block max-sm:whitespace-normal whitespace-nowrap">
-                  Kamu mendapatkan
-                </span>
-                <span className="block max-sm:whitespace-normal whitespace-nowrap">1 buah</span>
+                Kamu mendapatkan 1 buah
               </p>
             </div>
             <PrizePill label={result.prize.name} />
@@ -360,9 +361,16 @@ export function GiftCollectionFlow({ config, onWin, className }: GiftCollectionF
             <button
               type="button"
               onClick={restartForAnotherPrize}
-              className="mt-0.5 shrink-0 text-xs font-medium text-slate-600 underline-offset-2 hover:underline"
+              aria-label="Selesai"
+              className="relative z-20 mt-1 max-w-[min(100%,18rem)] shrink-0 transition active:scale-[0.98] hover:opacity-95 sm:mt-2 sm:max-w-none"
             >
-              Ambil hadiah lagi
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/flow/selesai-button.png"
+                alt="Selesai"
+                className="mx-auto h-14 w-auto max-w-full object-contain sm:h-20"
+                draggable={false}
+              />
             </button>
           </div>
         ) : null}
