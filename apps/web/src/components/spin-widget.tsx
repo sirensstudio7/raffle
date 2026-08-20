@@ -4,6 +4,7 @@ import { ArrowPathIcon } from "@heroicons/react/24/outline";
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import { matchesSpinKeybinding } from "@/lib/keybinding";
+import { ensureSpinClaim, takeSpinClaim } from "@/lib/spin-claim";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 const PRIZE_ITEM_SIZE = 168;
@@ -361,7 +362,6 @@ export function SpinWidget({
   const winAudioRef = useRef<HTMLAudioElement | null>(null);
   const confettiAudioRef = useRef<HTMLAudioElement | null>(null);
   const spinFnRef = useRef<() => void>(() => {});
-  const pendingClaimRef = useRef<Promise<SpinWinResult> | null>(null);
   const [claimReady, setClaimReady] = useState(false);
   const busy = motion !== "idle";
 
@@ -522,35 +522,17 @@ export function SpinWidget({
     });
   }
 
-  async function claimPrize(): Promise<SpinWinResult> {
-    const response = await fetch(`${API_URL}/public/spin/spin`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({}),
-    });
-    const data = (await response.json()) as { detail?: string } & SpinWinResult;
-    if (!response.ok) throw new Error(data.detail || "Spin failed");
-    return {
-      ...data,
-      prize: { ...data.prize, image_url: resolveAssetUrl(data.prize.image_url) },
-    };
-  }
-
   function ensurePendingClaim(): Promise<SpinWinResult> {
-    if (!pendingClaimRef.current) {
-      pendingClaimRef.current = claimPrize().then(
-        (result) => {
-          setClaimReady(true);
-          return result;
-        },
-        (err) => {
-          pendingClaimRef.current = null;
-          setClaimReady(false);
-          throw err;
-        },
-      );
-    }
-    return pendingClaimRef.current;
+    return ensureSpinClaim().then(
+      (result) => {
+        setClaimReady(true);
+        return result;
+      },
+      (err) => {
+        setClaimReady(false);
+        throw err;
+      },
+    );
   }
 
   async function onSpin() {
@@ -572,8 +554,7 @@ export function SpinWidget({
 
     let winResult: SpinWinResult;
     try {
-      winResult = await ensurePendingClaim();
-      pendingClaimRef.current = null;
+      winResult = await takeSpinClaim();
       setClaimReady(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Spin failed");
@@ -650,8 +631,7 @@ export function SpinWidget({
   }, []);
 
   useEffect(() => {
-    // Prefetch prize as soon as the spin UI appears (after Mulai).
-    pendingClaimRef.current = null;
+    // Reuse claim started on thank-you; do not clear — that would restart the slow API call.
     setClaimReady(false);
     ensurePendingClaim().catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps

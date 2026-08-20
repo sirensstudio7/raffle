@@ -1,4 +1,4 @@
-import { randomBytes, randomUUID } from "node:crypto";
+import { randomBytes } from "node:crypto";
 import { and, count, desc, eq, gte, sql } from "drizzle-orm";
 import { db } from "../db/client.js";
 import {
@@ -408,6 +408,7 @@ export async function rebalanceProbabilitiesFromStock(campaignId: string): Promi
 
   const stockTotal = enabled.reduce((sum, p) => sum + Math.max(0, p.stock), 0);
   let assigned = 0;
+  const updates: Promise<unknown>[] = [];
   for (let i = 0; i < enabled.length; i++) {
     const prize = enabled[i]!;
     const isLast = i === enabled.length - 1;
@@ -422,19 +423,24 @@ export async function rebalanceProbabilitiesFromStock(campaignId: string): Promi
       share = Number(((Math.max(0, prize.stock) / stockTotal) * 100).toFixed(2));
     }
     assigned = Number((assigned + share).toFixed(2));
-    await db
-      .update(rafflePrizes)
-      .set({ probability: share.toFixed(2) })
-      .where(eq(rafflePrizes.id, prize.id));
+    updates.push(
+      db
+        .update(rafflePrizes)
+        .set({ probability: share.toFixed(2) })
+        .where(eq(rafflePrizes.id, prize.id)),
+    );
   }
 
   for (const prize of prizes.filter((p) => !p.enabled)) {
     if (prizeProbability(prize) === 0) continue;
-    await db
-      .update(rafflePrizes)
-      .set({ probability: "0.00" })
-      .where(eq(rafflePrizes.id, prize.id));
+    updates.push(
+      db
+        .update(rafflePrizes)
+        .set({ probability: "0.00" })
+        .where(eq(rafflePrizes.id, prize.id)),
+    );
   }
+  await Promise.all(updates);
 }
 
 async function ensureProbabilityValid(campaignId: string): Promise<void> {
@@ -643,7 +649,8 @@ function normalizeCustomerIdentifier(raw: string | undefined): string {
 }
 
 function generateVoucherCode(prefix: string): string {
-  const part = randomBytes(4).toString("hex").toUpperCase().slice(0, 6);
+  // 10 hex chars ≈ 40 bits — clash checks are unnecessary for event-scale volume.
+  const part = randomBytes(5).toString("hex").toUpperCase();
   const clean = (prefix || "SPIN").replace(/[^A-Z0-9]/gi, "").slice(0, 12) || "SPIN";
   return `${clean}-${part}`;
 }
@@ -667,58 +674,76 @@ export async function performSpin(params: { phone?: string; name?: string }): Pr
   prize: RafflePrize;
   campaign: RaffleCampaign;
 }> {
-  const settings = await getOrCreateRaffleSettings();
+  // Parallelize independent reads — each round-trip to Supabase is expensive on Render.
+  const [settings, campaign] = await Promise.all([
+    getOrCreateRaffleSettings(),
+    getActiveCampaign(),
+  ]);
   if (!settings.enabled) throw httpError("Spin wheel is not available", 403);
-
-  const campaign = await getActiveCampaign();
   if (!campaign) throw httpError("No active campaign", 404);
 
   const customerIdentifier = normalizeCustomerIdentifier(params.phone);
   const name = params.name?.trim() || null;
 
+  const checks: Promise<void>[] = [];
+
   if (campaign.onePerUser) {
-    const [existing] = await db
-      .select()
-      .from(raffleWinners)
-      .where(
-        and(
-          eq(raffleWinners.campaignId, campaign.id),
-          eq(raffleWinners.customerIdentifier, customerIdentifier),
-        ),
-      )
-      .limit(1);
-    if (existing) throw httpError("You already spun in this campaign", 409);
+    checks.push(
+      db
+        .select({ id: raffleWinners.id })
+        .from(raffleWinners)
+        .where(
+          and(
+            eq(raffleWinners.campaignId, campaign.id),
+            eq(raffleWinners.customerIdentifier, customerIdentifier),
+          ),
+        )
+        .limit(1)
+        .then(([existing]) => {
+          if (existing) throw httpError("You already spun in this campaign", 409);
+        }),
+    );
   }
 
   if (campaign.dailyLimit != null) {
     const startOfDay = new Date();
     startOfDay.setUTCHours(0, 0, 0, 0);
-    const [daily] = await db
-      .select({ value: count() })
-      .from(raffleWinners)
-      .where(
-        and(
-          eq(raffleWinners.campaignId, campaign.id),
-          eq(raffleWinners.customerIdentifier, customerIdentifier),
-          gte(raffleWinners.wonAt, startOfDay),
-        ),
-      );
-    if ((daily?.value ?? 0) >= campaign.dailyLimit) {
-      throw httpError("Daily spin limit reached", 429);
-    }
+    const dailyLimit = campaign.dailyLimit;
+    checks.push(
+      db
+        .select({ value: count() })
+        .from(raffleWinners)
+        .where(
+          and(
+            eq(raffleWinners.campaignId, campaign.id),
+            eq(raffleWinners.customerIdentifier, customerIdentifier),
+            gte(raffleWinners.wonAt, startOfDay),
+          ),
+        )
+        .then(([daily]) => {
+          if ((daily?.value ?? 0) >= dailyLimit) {
+            throw httpError("Daily spin limit reached", 429);
+          }
+        }),
+    );
   }
 
   if (campaign.totalLimit != null) {
-    const [total] = await db
-      .select({ value: count() })
-      .from(raffleWinners)
-      .where(eq(raffleWinners.campaignId, campaign.id));
-    if ((total?.value ?? 0) >= campaign.totalLimit) {
-      throw httpError("Campaign spin limit reached", 429);
-    }
+    const totalLimit = campaign.totalLimit;
+    checks.push(
+      db
+        .select({ value: count() })
+        .from(raffleWinners)
+        .where(eq(raffleWinners.campaignId, campaign.id))
+        .then(([total]) => {
+          if ((total?.value ?? 0) >= totalLimit) {
+            throw httpError("Campaign spin limit reached", 429);
+          }
+        }),
+    );
   }
 
-  const prizes = await listPrizes(campaign.id);
+  const [prizes] = await Promise.all([listPrizes(campaign.id), Promise.all(checks)]);
   const picked = pickWeightedPrize(prizes);
 
   const result = await db.transaction(async (tx) => {
@@ -737,16 +762,7 @@ export async function performSpin(params: { phone?: string; name?: string }): Pr
       .set({ stock: locked.stock - 1 })
       .where(eq(rafflePrizes.id, locked.id));
 
-    let voucher = generateVoucherCode(locked.voucherPrefix);
-    for (let i = 0; i < 5; i += 1) {
-      const [clash] = await tx
-        .select()
-        .from(raffleWinners)
-        .where(eq(raffleWinners.voucherCode, voucher))
-        .limit(1);
-      if (!clash) break;
-      voucher = generateVoucherCode(locked.voucherPrefix);
-    }
+    const voucher = generateVoucherCode(locked.voucherPrefix);
 
     const [winner] = await tx
       .insert(raffleWinners)
@@ -764,17 +780,21 @@ export async function performSpin(params: { phone?: string; name?: string }): Pr
     return { winner: winner!, prize: { ...locked, stock: locked.stock - 1 } };
   });
 
-  await db.insert(raffleAnalyticsEvents).values({
-    eventName: "spin_won",
-    metadataJson: JSON.stringify({
-      campaign_id: campaign.id,
-      prize_id: result.prize.id,
-      voucher_code: result.winner.voucherCode,
-    }),
-  });
+  // Don't block the HTTP response on bookkeeping — Preparing waits on this endpoint.
+  void db
+    .insert(raffleAnalyticsEvents)
+    .values({
+      eventName: "spin_won",
+      metadataJson: JSON.stringify({
+        campaign_id: campaign.id,
+        prize_id: result.prize.id,
+        voucher_code: result.winner.voucherCode,
+      }),
+    })
+    .catch(() => {});
 
   if (normalizeOddsMode(campaign.oddsMode) === "auto") {
-    await rebalanceProbabilitiesFromStock(campaign.id);
+    void rebalanceProbabilitiesFromStock(campaign.id).catch(() => {});
   }
 
   return { winner: result.winner, prize: result.prize, campaign };

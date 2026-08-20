@@ -10,6 +10,7 @@ import {
 } from "@/components/spin-widget";
 import { cn } from "@/lib/cn";
 import { matchesSpinKeybinding } from "@/lib/keybinding";
+import { ensureSpinClaim, wakeSpinApi } from "@/lib/spin-claim";
 
 type FlowStep = "thankYou" | "spin" | "opening" | "reveal";
 
@@ -153,10 +154,9 @@ export function GiftCollectionFlow({ config, onWin, className }: GiftCollectionF
 
   function advanceFromThankYou() {
     if (step !== "thankYou") return;
-    // Nudge API awake before the spin screen mounts and prefetches.
-    void fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/health`).catch(
-      () => {},
-    );
+    // Claim should already be in flight from mount; keep it warm if not.
+    wakeSpinApi();
+    void ensureSpinClaim().catch(() => {});
     setStep("spin");
   }
 
@@ -164,6 +164,9 @@ export function GiftCollectionFlow({ config, onWin, className }: GiftCollectionF
     if (step !== "reveal") return;
     setResult(null);
     setStep("thankYou");
+    // Next round: start claim while they read thank-you again.
+    wakeSpinApi();
+    void ensureSpinClaim().catch(() => {});
   }
 
   function handleWin(win: SpinWinResult) {
@@ -176,6 +179,12 @@ export function GiftCollectionFlow({ config, onWin, className }: GiftCollectionF
     if (step === "thankYou") advanceFromThankYou();
     else if (step === "reveal") restartForAnotherPrize();
   };
+
+  useEffect(() => {
+    // Overlap the slow spin API with thank-you reading so Preparing is often already done.
+    wakeSpinApi();
+    void ensureSpinClaim().catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (step !== "opening") return;
