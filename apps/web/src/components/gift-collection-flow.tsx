@@ -153,6 +153,10 @@ export function GiftCollectionFlow({ config, onWin, className }: GiftCollectionF
 
   function advanceFromThankYou() {
     if (step !== "thankYou") return;
+    // Nudge API awake before the spin screen mounts and prefetches.
+    void fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/health`).catch(
+      () => {},
+    );
     setStep("spin");
   }
 

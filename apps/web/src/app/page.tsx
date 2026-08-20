@@ -31,6 +31,9 @@ export default function HomePage() {
   useEffect(() => {
     let cancelled = false;
 
+    // Wake the API early (Render free tier cold starts are slow).
+    void fetch(`${API_URL}/health`).catch(() => {});
+
     async function loadConfig(options?: { silent?: boolean }) {
       try {
         const data = await fetchSpinConfig();

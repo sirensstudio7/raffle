@@ -362,7 +362,6 @@ export function SpinWidget({
   const confettiAudioRef = useRef<HTMLAudioElement | null>(null);
   const spinFnRef = useRef<() => void>(() => {});
   const pendingClaimRef = useRef<Promise<SpinWinResult> | null>(null);
-  const [claimReady, setClaimReady] = useState(false);
   const busy = motion !== "idle";
 
   useEffect(() => {
@@ -538,32 +537,16 @@ export function SpinWidget({
 
   function ensurePendingClaim(): Promise<SpinWinResult> {
     if (!pendingClaimRef.current) {
-      pendingClaimRef.current = claimPrize().then(
-        (result) => {
-          setClaimReady(true);
-          return result;
-        },
-        (err) => {
-          pendingClaimRef.current = null;
-          setClaimReady(false);
-          throw err;
-        },
-      );
+      pendingClaimRef.current = claimPrize().catch((err) => {
+        pendingClaimRef.current = null;
+        throw err;
+      });
     }
     return pendingClaimRef.current;
   }
 
   async function onSpin() {
     if (busy || celebrating || prizes.length === 0) return;
-    if (!claimReady) {
-      // Still prefetching — kick it and wait; animation starts only after claim.
-      try {
-        await ensurePendingClaim();
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Spin failed");
-        return;
-      }
-    }
 
     const totalMs =
       config.spin_duration_ms === 3000 ||
@@ -573,21 +556,11 @@ export function SpinWidget({
         : DEFAULT_SPIN_DURATION_MS;
     const stopMs = Math.round(Math.min(1800, Math.max(700, totalMs * 0.28)));
     const spinPhaseMs = Math.max(700, totalMs - stopMs);
+    const startedAt = performance.now();
 
     setError(null);
     setResult(null);
     setCelebrating(false);
-
-    let winResult: SpinWinResult;
-    try {
-      winResult = await ensurePendingClaim();
-      pendingClaimRef.current = null;
-      setClaimReady(false);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Spin failed");
-      return;
-    }
-
     setMotion("spinning");
     ensureWinAudio();
     ensureConfettiAudio();
@@ -595,6 +568,13 @@ export function SpinWidget({
     startLoopSpin();
 
     try {
+      // Animation starts immediately. Prize claim runs in parallel (often already prefetched).
+      const [winResult] = await Promise.all([
+        ensurePendingClaim(),
+        sleep(spinPhaseMs),
+      ]);
+      pendingClaimRef.current = null;
+
       const prizeIndex = Math.max(
         0,
         prizes.findIndex((prize) => prize.id === winResult.prize.id),
@@ -605,9 +585,12 @@ export function SpinWidget({
       while (target % cycle !== prizeIndex) target += 1;
       target += cycle * 2;
 
-      await sleep(spinPhaseMs);
+      // If claim was slow, keep a short stop; if on time, use the remaining duration budget.
+      const elapsed = performance.now() - startedAt;
+      const remainingMs = Math.max(500, totalMs - elapsed);
+
       setMotion("stopping");
-      await animateTo(target, stopMs);
+      await animateTo(target, remainingMs);
       stopSpinSound();
 
       setResult(winResult);
@@ -635,6 +618,8 @@ export function SpinWidget({
       setCelebrating(false);
       setMotion("idle");
       setError(err instanceof Error ? err.message : "Spin failed");
+      // Retry prefetch after a failed claim.
+      ensurePendingClaim().catch(() => {});
     }
   }
 
@@ -656,7 +641,6 @@ export function SpinWidget({
 
   useEffect(() => {
     // Prefetch prize as soon as the spin UI appears (after Mulai).
-    setClaimReady(false);
     pendingClaimRef.current = null;
     ensurePendingClaim().catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -668,7 +652,7 @@ export function SpinWidget({
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.repeat) return;
       if (!matchesSpinKeybinding(event, spinKeybinding)) return;
-      if (busy || celebrating || !claimReady) return;
+      if (busy || celebrating) return;
 
       const target = event.target;
       if (target instanceof HTMLElement) {
@@ -690,7 +674,7 @@ export function SpinWidget({
 
     window.addEventListener("keydown", onKeyDown, true);
     return () => window.removeEventListener("keydown", onKeyDown, true);
-  }, [spinKeybinding, busy, celebrating, claimReady]);
+  }, [spinKeybinding, busy, celebrating]);
 
   const focusedIndex = Math.round(position);
 
@@ -740,15 +724,12 @@ export function SpinWidget({
       <div className="mt-3 flex w-full flex-col items-center gap-2 sm:mt-5 sm:gap-3">
         <button
           type="button"
-          disabled={busy || celebrating || !claimReady}
+          disabled={busy || celebrating}
           onClick={() => void onSpin()}
           className="inline-flex items-center gap-2 rounded-full border border-sky-600/25 bg-white/90 px-7 py-2.5 text-sm font-semibold text-sky-900 shadow-[0_8px_24px_rgba(91,185,232,0.35)] backdrop-blur-md transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-60"
         >
-          <ArrowPathIcon
-            className={["size-4", busy || !claimReady ? "animate-spin" : ""].join(" ")}
-            aria-hidden
-          />
-          {busy ? "Spinning…" : !claimReady ? "Preparing…" : result ? "Spin Again" : "Spin"}
+          <ArrowPathIcon className={["size-4", busy ? "animate-spin" : ""].join(" ")} aria-hidden />
+          {busy ? "Spinning…" : result ? "Spin Again" : "Spin"}
         </button>
         {error ? (
           <p className="rounded-full bg-red-500/80 px-3 py-1 text-center text-xs font-medium text-white">
