@@ -67,8 +67,9 @@ function parseSpinKeybinding(raw: unknown): string {
 
 export type SpinDurationMs = 3000 | 5000 | 7000;
 
-function normalizeSpinDurationMs(raw: number | null | undefined): SpinDurationMs {
-  if (raw === 3000 || raw === 5000 || raw === 7000) return raw;
+function normalizeSpinDurationMs(raw: number | string | null | undefined): SpinDurationMs {
+  const value = typeof raw === "number" ? raw : Number(raw);
+  if (value === 3000 || value === 5000 || value === 7000) return value;
   return 5000;
 }
 

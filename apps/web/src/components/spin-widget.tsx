@@ -17,7 +17,6 @@ const PRIZE_VISIBLE = 3;
 const LOOPS = 48;
 const SPIN_SPEED = 9;
 const DEFAULT_SPIN_DURATION_MS = 5000;
-const STOP_MS = 1400;
 const WIN_ANIM_MS = 5000;
 const SPIN_SOUND_SRC = "/sounds/lucky-spin-wheel.mp3";
 const WIN_SOUND_SRC = "/sounds/lucky-spin-win.mp3";
@@ -523,14 +522,16 @@ export function SpinWidget({
 
   async function onSpin() {
     if (busy || celebrating || prizes.length === 0) return;
-    const durationMs =
+    const totalMs =
       config.spin_duration_ms === 3000 ||
       config.spin_duration_ms === 5000 ||
       config.spin_duration_ms === 7000
         ? config.spin_duration_ms
         : DEFAULT_SPIN_DURATION_MS;
-    const minSpinMs = Math.max(800, durationMs - STOP_MS);
-    const stopMs = Math.min(STOP_MS, Math.max(600, durationMs - minSpinMs));
+    // ~30% of the selected duration is the decelerate/stop phase.
+    const plannedStopMs = Math.round(Math.min(2000, Math.max(800, totalMs * 0.3)));
+    const spinPhaseMs = Math.max(700, totalMs - plannedStopMs);
+    const startedAt = performance.now();
 
     setError(null);
     setResult(null);
@@ -542,15 +543,18 @@ export function SpinWidget({
     startLoopSpin();
 
     try {
-      const [response] = await Promise.all([
-        fetch(`${API_URL}/public/spin/spin`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({}),
-        }),
-        sleep(minSpinMs),
-      ]);
-      const data = (await response.json()) as { detail?: string } & SpinWinResult;
+      const fetchPromise = fetch(`${API_URL}/public/spin/spin`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      }).then(async (response) => {
+        const data = (await response.json()) as { detail?: string } & SpinWinResult;
+        return { response, data };
+      });
+
+      // Always run the fast-spin phase for the configured time (don't end early if API is fast).
+      await sleep(spinPhaseMs);
+      const { response, data } = await fetchPromise;
       if (!response.ok) throw new Error(data.detail || "Spin failed");
 
       const prizeIndex = Math.max(
@@ -563,8 +567,12 @@ export function SpinWidget({
       while (target % cycle !== prizeIndex) target += 1;
       target += cycle * 2;
 
+      // Use remaining budget so total time ≈ staff-selected duration.
+      const elapsed = performance.now() - startedAt;
+      const remainingMs = Math.max(500, totalMs - elapsed);
+
       setMotion("stopping");
-      await animateTo(target, stopMs);
+      await animateTo(target, remainingMs);
       stopSpinSound();
 
       const winResult: SpinWinResult = {

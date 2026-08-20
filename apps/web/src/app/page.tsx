@@ -53,7 +53,7 @@ export default function HomePage() {
     }
 
     void loadConfig();
-    const interval = window.setInterval(() => void loadConfig({ silent: true }), 10000);
+    const interval = window.setInterval(() => void loadConfig({ silent: true }), 5000);
     const onFocus = () => void loadConfig({ silent: true });
     const onVisibility = () => {
       if (document.visibilityState === "visible") void loadConfig({ silent: true });
