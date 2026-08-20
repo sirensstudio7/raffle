@@ -5,7 +5,7 @@ import * as schema from "./schema.js";
 
 const client = postgres(env.DATABASE_URL, {
   prepare: false,
-  max: env.DATABASE_URL.includes("supabase") ? 2 : 10,
+  max: env.DATABASE_URL.includes("supabase") ? 5 : 10,
 });
 
 export const db = drizzle(client, { schema });

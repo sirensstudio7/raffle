@@ -667,8 +667,8 @@ export async function performSpin(params: { phone?: string; name?: string }): Pr
   prize: RafflePrize;
   campaign: RaffleCampaign;
 }> {
-  const cfg = await getRafflePublicConfig();
-  if (!cfg.active || !cfg.enabled) throw httpError("Spin wheel is not available", 403);
+  const settings = await getOrCreateRaffleSettings();
+  if (!settings.enabled) throw httpError("Spin wheel is not available", 403);
 
   const campaign = await getActiveCampaign();
   if (!campaign) throw httpError("No active campaign", 404);
