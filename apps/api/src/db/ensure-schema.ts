@@ -10,6 +10,10 @@ const PATCHES: Array<{ column: string; ddl: string }> = [
     column: "spin_keybinding",
     ddl: `ALTER TABLE raffle_settings ADD COLUMN spin_keybinding VARCHAR(32) NOT NULL DEFAULT 'Space'`,
   },
+  {
+    column: "spin_duration_ms",
+    ddl: `ALTER TABLE raffle_settings ADD COLUMN spin_duration_ms INTEGER NOT NULL DEFAULT 5000`,
+  },
 ];
 
 /** Ensure optional columns exist (safe for dev when migrations were skipped). */

@@ -60,11 +60,13 @@ export async function registerSpinRoutes(app: FastifyInstance): Promise<void> {
         enabled?: boolean;
         screen_ratio?: string;
         spin_keybinding?: string;
+        spin_duration_ms?: number;
       };
       if (
         typeof body.enabled !== "boolean" &&
         body.screen_ratio === undefined &&
-        body.spin_keybinding === undefined
+        body.spin_keybinding === undefined &&
+        body.spin_duration_ms === undefined
       ) {
         return reply.status(400).send({ detail: "No settings provided" });
       }
@@ -74,6 +76,9 @@ export async function registerSpinRoutes(app: FastifyInstance): Promise<void> {
           ? { screen_ratio: body.screen_ratio as "auto" | "9:16" | "16:9" }
           : {}),
         ...(body.spin_keybinding !== undefined ? { spin_keybinding: body.spin_keybinding } : {}),
+        ...(body.spin_duration_ms !== undefined
+          ? { spin_duration_ms: body.spin_duration_ms as 3000 | 5000 | 7000 }
+          : {}),
       });
       return raffleSettingsOut(settings);
     } catch (err) {

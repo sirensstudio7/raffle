@@ -16,7 +16,7 @@ const MYSTERY_VISIBLE = 4;
 const PRIZE_VISIBLE = 3;
 const LOOPS = 48;
 const SPIN_SPEED = 9;
-const MIN_SPIN_MS = 2000;
+const DEFAULT_SPIN_DURATION_MS = 5000;
 const STOP_MS = 1400;
 const WIN_ANIM_MS = 5000;
 const SPIN_SOUND_SRC = "/sounds/lucky-spin-wheel.mp3";
@@ -98,6 +98,7 @@ export type SpinPublicConfig = {
   enabled: boolean;
   screen_ratio?: "auto" | "9:16" | "16:9";
   spin_keybinding?: string;
+  spin_duration_ms?: number;
   campaign: { id: string; name: string } | null;
   prizes: Array<{ id: string; name: string; image_url: string; probability: number }>;
 };
@@ -522,6 +523,15 @@ export function SpinWidget({
 
   async function onSpin() {
     if (busy || celebrating || prizes.length === 0) return;
+    const durationMs =
+      config.spin_duration_ms === 3000 ||
+      config.spin_duration_ms === 5000 ||
+      config.spin_duration_ms === 7000
+        ? config.spin_duration_ms
+        : DEFAULT_SPIN_DURATION_MS;
+    const minSpinMs = Math.max(800, durationMs - STOP_MS);
+    const stopMs = Math.min(STOP_MS, Math.max(600, durationMs - minSpinMs));
+
     setError(null);
     setResult(null);
     setCelebrating(false);
@@ -538,7 +548,7 @@ export function SpinWidget({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({}),
         }),
-        sleep(MIN_SPIN_MS),
+        sleep(minSpinMs),
       ]);
       const data = (await response.json()) as { detail?: string } & SpinWinResult;
       if (!response.ok) throw new Error(data.detail || "Spin failed");
@@ -554,7 +564,7 @@ export function SpinWidget({
       target += cycle * 2;
 
       setMotion("stopping");
-      await animateTo(target, STOP_MS);
+      await animateTo(target, stopMs);
       stopSpinSound();
 
       const winResult: SpinWinResult = {

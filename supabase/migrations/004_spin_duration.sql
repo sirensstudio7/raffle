@@ -1,0 +1,2 @@
+ALTER TABLE raffle_settings
+  ADD COLUMN IF NOT EXISTS spin_duration_ms INTEGER NOT NULL DEFAULT 5000;

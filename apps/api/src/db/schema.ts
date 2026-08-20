@@ -25,6 +25,7 @@ export const raffleSettings = pgTable("raffle_settings", {
   enabled: boolean("enabled").notNull().default(false),
   screenRatio: varchar("screen_ratio", { length: 10 }).notNull().default("auto"),
   spinKeybinding: varchar("spin_keybinding", { length: 32 }).notNull().default("Space"),
+  spinDurationMs: integer("spin_duration_ms").notNull().default(5000),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

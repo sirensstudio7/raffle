@@ -2,6 +2,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export type SpinOddsMode = "auto" | "manual";
 export type ScreenRatio = "auto" | "9:16" | "16:9";
+export type SpinDurationMs = 3000 | 5000 | 7000;
 
 export type SpinCampaign = {
   id: string;
@@ -121,20 +122,30 @@ export async function login(email: string, password: string) {
 
 export const api = {
   getSpinSettings: (token: string) =>
-    request<{ enabled: boolean; screen_ratio: ScreenRatio; spin_keybinding: string; updated_at: string }>(
-      "/admin/spin/settings",
-      token,
-    ),
+    request<{
+      enabled: boolean;
+      screen_ratio: ScreenRatio;
+      spin_keybinding: string;
+      spin_duration_ms: SpinDurationMs;
+      updated_at: string;
+    }>("/admin/spin/settings", token),
 
   updateSpinSettings: (
     token: string,
-    body: { enabled?: boolean; screen_ratio?: ScreenRatio; spin_keybinding?: string },
+    body: {
+      enabled?: boolean;
+      screen_ratio?: ScreenRatio;
+      spin_keybinding?: string;
+      spin_duration_ms?: SpinDurationMs;
+    },
   ) =>
-    request<{ enabled: boolean; screen_ratio: ScreenRatio; spin_keybinding: string; updated_at: string }>(
-      "/admin/spin/settings",
-      token,
-      { method: "PATCH", body: JSON.stringify(body) },
-    ),
+    request<{
+      enabled: boolean;
+      screen_ratio: ScreenRatio;
+      spin_keybinding: string;
+      spin_duration_ms: SpinDurationMs;
+      updated_at: string;
+    }>("/admin/spin/settings", token, { method: "PATCH", body: JSON.stringify(body) }),
 
   listCampaigns: (token: string) =>
     request<{ items: SpinCampaign[] }>("/admin/spin/campaigns", token),

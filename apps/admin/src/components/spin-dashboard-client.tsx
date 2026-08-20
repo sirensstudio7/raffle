@@ -9,6 +9,7 @@ import {
   type ScreenRatio,
   type SpinAnalytics,
   type SpinCampaign,
+  type SpinDurationMs,
   type SpinPrize,
   type SpinWinner,
 } from "@/lib/api";
@@ -18,11 +19,14 @@ import { formatKeybinding, SPIN_KEY_PRESETS } from "@/lib/keybinding";
 
 type ManageTab = "display" | "campaigns" | "prizes" | "winners" | "analytics";
 
+const SPIN_DURATION_OPTIONS: SpinDurationMs[] = [3000, 5000, 7000];
+
 export function SpinDashboardClient() {
   const { token } = useAuth();
   const [enabled, setEnabled] = useState(false);
   const [screenRatio, setScreenRatio] = useState<ScreenRatio>("auto");
   const [spinKeybinding, setSpinKeybinding] = useState("");
+  const [spinDurationMs, setSpinDurationMs] = useState<SpinDurationMs>(5000);
   const [capturingKey, setCapturingKey] = useState(false);
   const [campaigns, setCampaigns] = useState<SpinCampaign[]>([]);
   const [selectedCampaignId, setSelectedCampaignId] = useState("");
@@ -92,6 +96,13 @@ export function SpinDashboardClient() {
       setEnabled(settings.enabled);
       setScreenRatio(settings.screen_ratio ?? "auto");
       setSpinKeybinding(settings.spin_keybinding ?? "Space");
+      setSpinDurationMs(
+        settings.spin_duration_ms === 3000 ||
+          settings.spin_duration_ms === 5000 ||
+          settings.spin_duration_ms === 7000
+          ? settings.spin_duration_ms
+          : 5000,
+      );
       setCampaigns(campaignRes.items);
       setAnalytics(stats);
       setSelectedCampaignId((current) => current || campaignRes.items[0]?.id || "");
@@ -207,6 +218,22 @@ export function SpinDashboardClient() {
       setMessage(`Screen ratio set to ${res.screen_ratio}.`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to update screen ratio");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function setSpinDurationSetting(next: SpinDurationMs) {
+    if (!token || next === spinDurationMs) return;
+    setBusy(true);
+    setMessage(null);
+    setError(null);
+    try {
+      const res = await api.updateSpinSettings(token, { spin_duration_ms: next });
+      setSpinDurationMs(res.spin_duration_ms);
+      setMessage(`Spin duration set to ${res.spin_duration_ms / 1000}s.`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update spin duration");
     } finally {
       setBusy(false);
     }
@@ -570,6 +597,33 @@ export function SpinDashboardClient() {
                         Preview
                       </span>
                     </div>
+                  </div>
+                </div>
+
+                <div className="space-y-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-4">
+                  <div>
+                    <p className="text-sm font-medium text-slate-800">Spin duration</p>
+                    <p className="mt-0.5 text-xs text-slate-500">
+                      How long the public wheel spins before stopping on a prize.
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-1 rounded-lg bg-slate-200/80 p-1">
+                    {SPIN_DURATION_OPTIONS.map((duration) => (
+                      <button
+                        key={duration}
+                        type="button"
+                        disabled={busy}
+                        onClick={() => void setSpinDurationSetting(duration)}
+                        className={cn(
+                          "rounded-md px-3 py-1.5 text-xs font-medium transition",
+                          spinDurationMs === duration
+                            ? "bg-white text-slate-900 shadow-sm"
+                            : "text-slate-600 hover:text-slate-900",
+                        )}
+                      >
+                        {duration / 1000}s
+                      </button>
+                    ))}
                   </div>
                 </div>
 

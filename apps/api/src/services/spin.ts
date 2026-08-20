@@ -65,11 +65,26 @@ function parseSpinKeybinding(raw: unknown): string {
   return value;
 }
 
+export type SpinDurationMs = 3000 | 5000 | 7000;
+
+function normalizeSpinDurationMs(raw: number | null | undefined): SpinDurationMs {
+  if (raw === 3000 || raw === 5000 || raw === 7000) return raw;
+  return 5000;
+}
+
+function parseSpinDurationMs(raw: unknown): SpinDurationMs {
+  if (raw === undefined || raw === null || raw === "") return 5000;
+  const value = typeof raw === "number" ? raw : Number(raw);
+  if (value === 3000 || value === 5000 || value === 7000) return value;
+  throw httpError("spin_duration_ms must be 3000, 5000, or 7000", 400);
+}
+
 export function raffleSettingsOut(settings: RaffleSettings) {
   return {
     enabled: settings.enabled,
     screen_ratio: normalizeScreenRatio(settings.screenRatio),
     spin_keybinding: normalizeSpinKeybinding(settings.spinKeybinding),
+    spin_duration_ms: normalizeSpinDurationMs(settings.spinDurationMs),
     updated_at: settings.updatedAt.toISOString(),
   };
 }
@@ -135,6 +150,7 @@ export type RafflePublicConfig = {
   enabled: boolean;
   screen_ratio: ScreenRatio;
   spin_keybinding: string;
+  spin_duration_ms: SpinDurationMs;
   campaign: ReturnType<typeof campaignOut> | null;
   prizes: Array<ReturnType<typeof prizeOut>>;
 };
@@ -143,13 +159,30 @@ export async function getRafflePublicConfig(): Promise<RafflePublicConfig> {
   const settings = await getOrCreateRaffleSettings();
   const screen_ratio = normalizeScreenRatio(settings.screenRatio);
   const spin_keybinding = normalizeSpinKeybinding(settings.spinKeybinding);
+  const spin_duration_ms = normalizeSpinDurationMs(settings.spinDurationMs);
   if (!settings.enabled) {
-    return { active: true, enabled: false, screen_ratio, spin_keybinding, campaign: null, prizes: [] };
+    return {
+      active: true,
+      enabled: false,
+      screen_ratio,
+      spin_keybinding,
+      spin_duration_ms,
+      campaign: null,
+      prizes: [],
+    };
   }
 
   const campaign = await getActiveCampaign();
   if (!campaign) {
-    return { active: true, enabled: true, screen_ratio, spin_keybinding, campaign: null, prizes: [] };
+    return {
+      active: true,
+      enabled: true,
+      screen_ratio,
+      spin_keybinding,
+      spin_duration_ms,
+      campaign: null,
+      prizes: [],
+    };
   }
   const prizes = await listPrizes(campaign.id);
   return {
@@ -157,6 +190,7 @@ export async function getRafflePublicConfig(): Promise<RafflePublicConfig> {
     enabled: true,
     screen_ratio,
     spin_keybinding,
+    spin_duration_ms,
     campaign: campaignOut(campaign),
     prizes: prizes.filter((p) => p.enabled && prizeProbability(p) > 0).map(prizeOut),
   };
@@ -166,11 +200,13 @@ export async function updateRaffleSettings(input: {
   enabled?: boolean;
   screen_ratio?: ScreenRatio;
   spin_keybinding?: string;
+  spin_duration_ms?: SpinDurationMs;
 }): Promise<RaffleSettings> {
   if (
     input.enabled === undefined &&
     input.screen_ratio === undefined &&
-    input.spin_keybinding === undefined
+    input.spin_keybinding === undefined &&
+    input.spin_duration_ms === undefined
   ) {
     throw httpError("No settings to update", 400);
   }
@@ -187,6 +223,10 @@ export async function updateRaffleSettings(input: {
         input.spin_keybinding === undefined
           ? existing.spinKeybinding
           : parseSpinKeybinding(input.spin_keybinding),
+      spinDurationMs:
+        input.spin_duration_ms === undefined
+          ? existing.spinDurationMs
+          : parseSpinDurationMs(input.spin_duration_ms),
       updatedAt: new Date(),
     })
     .where(eq(raffleSettings.id, existing.id))
