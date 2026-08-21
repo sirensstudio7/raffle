@@ -110,7 +110,7 @@ export function SideDecor({ side }: { side: "left" | "right" }) {
       pieces={side === "left" ? LEFT_PIECES : RIGHT_PIECES}
       folder={side === "left" ? "decor-left" : "decor-right"}
       motion={side === "left" ? "a" : "b"}
-      preserveAspectRatio={side === "left" ? "xMaxYMid slice" : "xMinYMid slice"}
+      preserveAspectRatio={side === "left" ? "xMinYMid meet" : "xMaxYMid meet"}
     />
   );
 }
