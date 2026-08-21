@@ -314,6 +314,24 @@ body {
     height: clamp(22rem, 86dvh, 52rem);
     max-width: clamp(5rem, 20vw, 12rem);
   }
+
+  .gift-side-decor-left {
+    left: -2.75rem;
+  }
+
+  .gift-side-decor-right {
+    right: -2.75rem;
+  }
+}
+
+@media (orientation: portrait) and (max-width: 639px) {
+  .gift-side-decor-left {
+    left: -1.85rem;
+  }
+
+  .gift-side-decor-right {
+    right: -1.85rem;
+  }
 }
 
 /* Narrow phones: keep readable, but don’t crush to ~4rem */
