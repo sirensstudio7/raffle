@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { CanvasConfetti } from "@/components/canvas-confetti";
-import { BottomDecor, SideDecor } from "@/components/side-decor";
+import { BottomDecor, SideDecor, TopDecor } from "@/components/side-decor";
 import {
   SpinWidget,
   type SpinPublicConfig,
@@ -262,6 +262,11 @@ export function GiftCollectionFlow({ config, onWin, className }: GiftCollectionF
 
       <SideDecor side="left" />
       <SideDecor side="right" />
+      {step === "thankYou" ? (
+        <div className="gift-top-decor-slot" aria-hidden>
+          <TopDecor />
+        </div>
+      ) : null}
 
       <div className="relative z-10 flex min-h-0 w-full flex-1 flex-col items-center justify-center overflow-hidden px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-[4.25rem] sm:px-4 sm:pb-6 sm:pt-24">
         {step === "thankYou" ? (

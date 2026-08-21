@@ -170,9 +170,19 @@ body {
 }
 
 @media (orientation: portrait) {
+  .gift-thankyou-title {
+    font-size: clamp(1.85rem, 6.8vw, 3.15rem);
+  }
+
   .gift-reveal-prize {
     width: min(92vw, 52dvh, 28rem);
     height: min(92vw, 52dvh, 28rem);
+  }
+}
+
+@media (orientation: portrait) and (max-width: 639px) {
+  .gift-thankyou-title {
+    font-size: clamp(1.25rem, 5.8vw, 1.7rem);
   }
 }
 
@@ -463,6 +473,20 @@ body {
   pointer-events: none;
 }
 
+.gift-top-decor-slot {
+  display: flex;
+  position: absolute;
+  left: 50%;
+  top: 0;
+  z-index: 4;
+  width: 100%;
+  max-width: min(100%, 42rem);
+  justify-content: center;
+  margin: 0;
+  transform: translateX(-50%) scaleY(-1);
+  pointer-events: none;
+}
+
 .gift-bottom-decor {
   position: relative;
   left: auto;
@@ -492,7 +516,8 @@ body {
 }
 
 @media (min-width: 640px) {
-  .gift-bottom-decor-slot {
+  .gift-bottom-decor-slot,
+  .gift-top-decor-slot {
     max-width: min(100%, 36rem);
   }
 
@@ -502,7 +527,8 @@ body {
 }
 
 @media (min-width: 1024px) {
-  .gift-bottom-decor-slot {
+  .gift-bottom-decor-slot,
+  .gift-top-decor-slot {
     max-width: min(100%, 40rem);
   }
 

@@ -122,3 +122,15 @@ export function BottomDecor() {
     />
   );
 }
+
+export function TopDecor() {
+  return (
+    <DecorSvg
+      className="gift-bottom-decor gift-top-decor"
+      view={BOTTOM_VIEW}
+      pieces={BOTTOM_PIECES}
+      folder="decor-bottom"
+      motion="c"
+    />
+  );
+}
