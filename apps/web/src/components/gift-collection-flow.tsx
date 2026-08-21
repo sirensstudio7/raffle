@@ -10,7 +10,7 @@ import {
 } from "@/components/spin-widget";
 import { cn } from "@/lib/cn";
 import { matchesSpinKeybinding } from "@/lib/keybinding";
-import { ensureSpinClaim, wakeSpinApi } from "@/lib/spin-claim";
+import { ensureSpinClaim, preloadPrizeImage, wakeSpinApi } from "@/lib/spin-claim";
 
 type FlowStep = "thankYou" | "spin" | "opening" | "reveal";
 
@@ -171,6 +171,7 @@ export function GiftCollectionFlow({ config, onWin, className }: GiftCollectionF
 
   function handleWin(win: SpinWinResult) {
     setResult(win);
+    preloadPrizeImage(win.prize.image_url);
     onWin?.(win);
     setStep("opening");
   }
@@ -184,7 +185,8 @@ export function GiftCollectionFlow({ config, onWin, className }: GiftCollectionF
     // Overlap the slow spin API with thank-you reading so Preparing is often already done.
     wakeSpinApi();
     void ensureSpinClaim().catch(() => {});
-  }, []);
+    for (const prize of config.prizes) preloadPrizeImage(prize.image_url);
+  }, [config.prizes]);
 
   useEffect(() => {
     if (step !== "opening") return;
@@ -322,6 +324,11 @@ export function GiftCollectionFlow({ config, onWin, className }: GiftCollectionF
 
         {step === "opening" ? (
           <div className="gift-step-in flex w-full max-w-sm flex-col items-center gap-6">
+            {result?.prize.image_url ? (
+              // Warm the prize file during the box-open hold so reveal is instant.
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={result.prize.image_url} alt="" className="hidden" aria-hidden />
+            ) : null}
             <div className="gift-box-opening gift-box-open-shake">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img

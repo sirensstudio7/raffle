@@ -22,10 +22,20 @@ async function claimPrize(): Promise<SpinClaimResult> {
   });
   const data = (await response.json()) as { detail?: string } & SpinClaimResult;
   if (!response.ok) throw new Error(data.detail || "Spin failed");
-  return {
+  const result = {
     ...data,
     prize: { ...data.prize, image_url: resolveAssetUrl(data.prize.image_url) },
   };
+  preloadPrizeImage(result.prize.image_url);
+  return result;
+}
+
+/** Warm the winning (or catalog) image so reveal does not wait on Supabase. */
+export function preloadPrizeImage(url: string | null | undefined): void {
+  if (!url || typeof window === "undefined") return;
+  const img = new Image();
+  img.decoding = "async";
+  img.src = url;
 }
 
 /** Start (or reuse) the prize claim. Safe to call from thank-you so Preparing is often done by Spin. */
