@@ -64,17 +64,20 @@ function DecorSvg({
   pieces,
   folder,
   motion,
+  preserveAspectRatio = "xMidYMid meet",
 }: {
   className: string;
   view: { w: number; h: number };
   pieces: DecorPiece[];
   folder: string;
   motion: "a" | "b" | "c";
+  preserveAspectRatio?: string;
 }) {
   return (
     <svg
       className={className}
       viewBox={`0 0 ${view.w} ${view.h}`}
+      preserveAspectRatio={preserveAspectRatio}
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden
       focusable="false"
@@ -107,6 +110,7 @@ export function SideDecor({ side }: { side: "left" | "right" }) {
       pieces={side === "left" ? LEFT_PIECES : RIGHT_PIECES}
       folder={side === "left" ? "decor-left" : "decor-right"}
       motion={side === "left" ? "a" : "b"}
+      preserveAspectRatio={side === "left" ? "xMaxYMid slice" : "xMinYMid slice"}
     />
   );
 }

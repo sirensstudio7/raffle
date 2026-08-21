@@ -291,12 +291,11 @@ body {
   position: absolute;
   top: 50%;
   z-index: 5;
-  /* Fluid height + width so left/right art scales with the frame */
   height: clamp(18rem, 72dvh, 40rem);
   width: auto;
   max-width: clamp(4.25rem, 12vw, 9rem);
   transform: translateY(-50%);
-  overflow: visible;
+  overflow: hidden;
 }
 
 .gift-side-decor-left {
@@ -311,31 +310,34 @@ body {
 
 @media (orientation: portrait) {
   .gift-side-decor {
-    height: clamp(22rem, 86dvh, 52rem);
-    max-width: clamp(5rem, 20vw, 12rem);
+    top: 0;
+    height: 100%;
+    max-height: none;
+    width: clamp(4.25rem, 18vw, 9.5rem);
+    max-width: none;
+    transform: none;
+    overflow: hidden;
   }
 
   .gift-side-decor-left {
-    left: -2.75rem;
+    left: 0;
+    aspect-ratio: auto;
   }
 
   .gift-side-decor-right {
-    right: -2.75rem;
+    right: 0;
+    aspect-ratio: auto;
   }
 }
 
 @media (orientation: portrait) and (max-width: 639px) {
-  .gift-side-decor-left {
-    left: -1.85rem;
-  }
-
-  .gift-side-decor-right {
-    right: -1.85rem;
+  .gift-side-decor {
+    width: clamp(3.5rem, 16vw, 6.5rem);
   }
 }
 
-/* Narrow phones: keep readable, but don’t crush to ~4rem */
-@media (max-width: 639px) {
+/* Narrow landscape phones */
+@media (orientation: landscape) and (max-width: 639px) {
   .gift-side-decor {
     height: clamp(20rem, 78dvh, 36rem);
     max-width: clamp(4.5rem, 22vw, 8rem);
@@ -343,8 +345,7 @@ body {
   }
 }
 
-/* Very small phones */
-@media (max-width: 379px) {
+@media (orientation: landscape) and (max-width: 379px) {
   .gift-side-decor {
     height: clamp(16rem, 70dvh, 28rem);
     max-width: clamp(3.5rem, 18vw, 5.5rem);
